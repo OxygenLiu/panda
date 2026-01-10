@@ -25,6 +25,20 @@ class McuConfig(NamedTuple):
     return self.bootstub_address + sum(self.sector_sizes[:i])
 
 
+F4Config = McuConfig(
+  "STM32F4",
+  0x463,
+  [0x4000 for _ in range(4)] + [0x10000] + [0x20000 for _ in range(11)],
+  16,
+  0x1FFF7A10,
+  0x800,
+  0x1FFF79C0,
+  0x8004000,
+  "panda.bin.signed",
+  0x8000000,
+  "bootstub.panda.bin",
+)
+
 H7Config = McuConfig(
   "STM32H7",
   0x483,
@@ -32,13 +46,22 @@ H7Config = McuConfig(
   8,
   0x1FF1E800,
   0x400,
-  # there is an 8th sector, but we use that for the provisioning chunk, so don't program over that!
+  # there is an 8th sector, but we use that for provisioning chunk, so don't program over that!
   0x080FFFC0,
   0x8020000,
   "panda_h7.bin.signed",
   0x8000000,
   "bootstub.panda_h7.bin",
 )
+
+@enum.unique
+class McuType(enum.Enum):
+  F4 = F4Config
+  H7 = H7Config
+
+  @property
+  def config(self):
+    return self.value
 
 @enum.unique
 class McuType(enum.Enum):
