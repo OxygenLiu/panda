@@ -123,6 +123,21 @@ def build_project(project_name, project, main, extra_flags):
 
 
 base_project_h7 = {
+
+base_project_f4 = {
+  "STARTUP_FILE": "./board/stm32f4/startup_stm32f413xx.s",
+  "LINKER_SCRIPT": "./board/stm32f4/stm32f4_flash.ld",
+  "APP_START_ADDRESS": "0x8004000",
+  "FLAGS": [
+    "-mcpu=cortex-m4",
+    "-mhard-float",
+    "-DSTM32F4",
+    "-DSTM32F413xx",
+    "-Iboard/stm32f4/inc",
+    "-mfpu=fpv4-sp-d16",
+  ],
+}
+
   "STARTUP_FILE": "./board/stm32h7/startup_stm32h7x5xx.s",
   "LINKER_SCRIPT": "./board/stm32h7/stm32h7x5_flash.ld",
   "APP_START_ADDRESS": "0x8020000",
@@ -151,6 +166,7 @@ with open("board/obj/cert.h", "w") as f:
     f.write("\n".join(cert) + "\n")
 
 # panda fw
+build_project("panda", base_project_f4, "./board/main.c", [])
 build_project("panda_h7", base_project_h7, "./board/main.c", [])
 
 # panda jungle fw
