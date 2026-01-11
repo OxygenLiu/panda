@@ -23,17 +23,27 @@ bool can_loopback = false;
 #define CAN_RX_BUFFER_SIZE 4096U
 #define CAN_TX_BUFFER_SIZE 416U
 
-#ifdef STM32H7
+#ifdef STM32F4
+// F4 has limited RAM (256KB), use smaller buffers
+#define CAN_RX_BUFFER_SIZE_F4 1024U
+#define CAN_TX_BUFFER_SIZE_F4 256U
+
+can_buffer(rx_q, CAN_RX_BUFFER_SIZE_F4)
+can_buffer(tx1_q, CAN_TX_BUFFER_SIZE_F4)
+can_buffer(tx2_q, CAN_TX_BUFFER_SIZE_F4)
+can_buffer(tx3_q, CAN_TX_BUFFER_SIZE_F4)
+#elif defined(STM32H7)
 // ITCM RAM and DTCM RAM are the fastest for Cortex-M7 core access
 __attribute__((section(".axisram"))) can_buffer(rx_q, CAN_RX_BUFFER_SIZE)
 __attribute__((section(".itcmram"))) can_buffer(tx1_q, CAN_TX_BUFFER_SIZE)
 __attribute__((section(".itcmram"))) can_buffer(tx2_q, CAN_TX_BUFFER_SIZE)
+can_buffer(tx3_q, CAN_TX_BUFFER_SIZE)
 #else  // kept for PC
 can_buffer(rx_q, CAN_RX_BUFFER_SIZE)
 can_buffer(tx1_q, CAN_TX_BUFFER_SIZE)
 can_buffer(tx2_q, CAN_TX_BUFFER_SIZE)
-#endif
 can_buffer(tx3_q, CAN_TX_BUFFER_SIZE)
+#endif
 
 // FIXME:
 // cppcheck-suppress misra-c2012-9.3
