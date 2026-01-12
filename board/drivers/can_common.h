@@ -22,8 +22,15 @@ bool can_loopback = false;
   extern can_ring can_##x; \
   can_ring can_##x = { .w_ptr = 0, .r_ptr = 0, .fifo_size = (size), .elems = (CANPacket_t *)&(elems_##x) };
 
-#define CAN_RX_BUFFER_SIZE 4096U
-#define CAN_TX_BUFFER_SIZE 416U
+// CAN buffer sizes - F4 has limited RAM (256KB total)
+// With 8-byte CAN packets, F4 needs smaller buffers to avoid RAM overflow
+#ifdef STM32F4
+  #define CAN_RX_BUFFER_SIZE 1024U  // Reduced for F4 limited RAM
+  #define CAN_TX_BUFFER_SIZE 128U   // Reduced for F4 limited RAM
+#else
+  #define CAN_RX_BUFFER_SIZE 4096U  // H7 has more RAM for CAN-FD
+  #define CAN_TX_BUFFER_SIZE 416U
+#endif
 
 #ifdef STM32H7
 // ITCM RAM and DTCM RAM are the fastest for Cortex-M7 core access
@@ -161,9 +168,8 @@ void can_set_forwarding(uint8_t from, uint8_t to) {
 #endif
 
 void ignition_can_hook(CANPacket_t *msg) {
-  int bus = GET_BUS(msg);
-  if (bus == 0) {
-    int addr = GET_ADDR(msg);
+  if (msg->bus == 0U) {
+    int addr = msg->addr;
     int len = GET_LEN(msg);
 
     // GM exception
@@ -237,7 +243,7 @@ bool can_check_checksum(CANPacket_t *packet) {
 
 void can_send(CANPacket_t *to_push, uint8_t bus_number, bool skip_tx_hook) {
   if (skip_tx_hook || safety_tx_hook(to_push) != 0) {
-    if (bus_number < PANDA_BUS_CNT) {
+    if (bus_number < PANDA_CAN_CNT) {
       // add CAN packet to send queue
       tx_buffer_overflow += can_push(can_queues[bus_number], to_push) ? 0U : 1U;
       process_can(CAN_NUM_FROM_BUS_NUM(bus_number));
